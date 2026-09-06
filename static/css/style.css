@@ -1,3 +1,6 @@
+/* =========================
+   PENGATURAN DASAR GLOBAL
+   ========================= */
 * {
     margin: 0;
     padding: 0;
@@ -7,8 +10,8 @@
 :root {
     --ink: #1c1917;
     --paper: #faf6f0;
-    --accent: #d95d39;
-    --accent-dark: #a8442a;
+    --accent: #4f46e5;
+    --accent-dark: #4338ca;
     --line: #e3d9c9;
     --text-muted: #6b6459;
     --radius: 4px;
@@ -31,6 +34,9 @@ h1, .brand {
     padding: 0 1.5rem;
 }
 
+/* =========================
+   HEADER & NAVBAR
+   ========================= */
 .site-header {
     border-bottom: 1px solid var(--line);
 }
@@ -60,6 +66,9 @@ h1, .brand {
     font-size: 0.95rem;
 }
 
+/* =========================
+   HERO / PROFILE SECTION
+   ========================= */
 .hero {
     padding: 4.5rem 0 5rem;
 }
@@ -176,6 +185,192 @@ h1, .brand {
     border-top: 1px solid var(--line);
 }
 
+/* =========================================
+   EDUCATION SECTION (BENTO GRID IMPLEMENTATION)
+   ========================================= */
+
+.education {
+    padding: 5rem 0 6rem;
+    border-top: 1px solid var(--line);
+}
+
+/* Mengatur kepala judul bagian agar sejajar kiri-kanan */
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    gap: 2rem;
+}
+
+.section-kicker {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.section-heading h2 {
+    max-width: 600px;
+    margin-left: auto;
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1;
+    text-align: right;
+}
+
+/* 
+  KUNCI UTAMA BENTO GRID:
+  Membagi layout menjadi 2 kolom utama dengan CSS Grid.
+  Kolom 1 (1.5fr) untuk kartu besar, Kolom 2 (1fr) untuk dua kartu kecil di kanan.
+*/
+.education-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr; 
+    grid-template-rows: repeat(2, minmax(180px, auto));
+    gap: 1.5rem; 
+}
+
+/* Desain dasar setiap kotak kartu */
+.education-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background-color: #f3ede4;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 
+  Kartu Utama (Featured Card):
+  Memakan 2 baris ke bawah (grid-row: span 2) di sebelah kiri.
+*/
+.education-featured {
+    grid-row: span 2;
+    display: grid;
+    grid-template-rows: 1.2fr 1fr;
+}
+
+.education-featured:hover {
+    transform: translateY(-6px);
+    box-shadow: 10px 10px 0 var(--accent);
+}
+
+/* Kotak gambar di dalam kartu utama */
+.education-image {
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+}
+
+.education-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    filter: grayscale(100%);
+    transition: transform 0.6s ease, filter 0.6s ease;
+}
+
+/* Efek saat kursor menyentuh kartu utama: warna foto kembali & kartu bergeser */
+.education-featured:hover .education-image img {
+    transform: scale(1.08);
+    filter: grayscale(0%);
+}
+
+.education-image-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(28, 25, 23, 0.65);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.education-featured:hover .education-image-overlay {
+    opacity: 1;
+}
+
+.education-image-overlay span {
+    color: var(--paper);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.education-content {
+    padding: 1.5rem;
+}
+
+.education-year {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--accent-dark);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.education-content h3 {
+    margin-bottom: 0.6rem;
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.education-content p {
+    max-width: 600px;
+    color: var(--text-muted);
+}
+
+/* Dua Kartu Kecil di Samping Kanan */
+.education-small {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem;
+}
+
+.education-small:hover {
+    transform: translateX(6px);
+    box-shadow: -6px 6px 0 var(--accent);
+}
+
+.education-number {
+    align-self: flex-end;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.education-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: var(--accent-dark);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.education-small h3 {
+    margin-bottom: 0.4rem;
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: 1.5rem;
+}
+
+.education-small p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* =========================================
+   RESPONSIF UNTUK LAYAR MOBILE (< 600px)
+   ========================================= */
 @media (max-width: 600px) {
     .hero-grid {
         grid-template-columns: 1fr;
@@ -191,5 +386,43 @@ h1, .brand {
 
     .social-links {
         justify-content: flex-start;
+    }
+    
+    .education {
+        padding: 4rem 0;
+    }
+
+    .section-heading {
+        display: block;
+        margin-bottom: 2rem;
+    }
+
+    .section-heading h2 {
+        margin-top: 0.75rem;
+        text-align: left;
+    }
+
+    /* Di HP, tata letak Bento yang melebar samping diubah jadi berbaris ke bawah (1 kolom) */
+    .education-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .education-featured {
+        grid-row: auto;
+    }
+
+    .education-image {
+        min-height: 240px;
+    }
+
+    .education-featured:hover {
+        transform: translateY(-4px);
+        box-shadow: 6px 6px 0 var(--accent);
+    }
+
+    .education-small:hover {
+        transform: translateY(-4px);
+        box-shadow: 6px 6px 0 var(--accent);
     }
 }
