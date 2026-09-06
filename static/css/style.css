@@ -249,7 +249,8 @@ h1, .brand {
 .education-featured {
     grid-row: span 2;
     display: grid;
-    grid-template-rows: 1.2fr 1fr;
+    /* Membatasi tinggi gambar di kisaran 220px agar layout lebih memendek */
+    grid-template-rows: 220px auto; 
 }
 
 .education-featured:hover {
@@ -261,7 +262,8 @@ h1, .brand {
 .education-image {
     position: relative;
     overflow: hidden;
-    min-height: 300px;
+    /* Menghapus min-height: 300px agar gambar tidak memanjang ke bawah */
+    height: 100%;
 }
 
 .education-image img {
