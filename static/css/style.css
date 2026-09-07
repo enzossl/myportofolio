@@ -578,6 +578,20 @@ h1, .brand {
         box-shadow: 6px 6px 0 var(--accent);
     }
 
+    .education-image img {
+        filter: grayscale(0%);
+        object-fit: contain;
+        background-color: #fff; /* Memberi latar belakang seragam jika proporsi logo berbeda */
+    }
+
+    .education-featured:hover .education-image img {
+        transform: none;
+    }
+
+    .education-image-overlay {
+        display: none;
+    }
+
     /* Experience */
 
     .experience {
