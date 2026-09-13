@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 
-from main.models import Experience
+from main.models import Experience, Achievement
 
 
 def show_main(request):
@@ -24,3 +24,10 @@ def show_experience(request):
         "experience_list": Experience.objects.all(),
     }
     return render(request, "experience.html", context)
+
+def show_achievements(request):
+    context = {
+        "name": "Enzo Susilo",
+        "achievements_list": Achievement.objects.all(),
+    }
+    return render(request, "achievements.html", context)
