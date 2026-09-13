@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from main.models import Experience
+from main.models import Experience, Achievement
 
 
 class MainTest(TestCase):
@@ -56,3 +56,29 @@ class MainTest(TestCase):
         self.assertFalse(self.experience.is_ongoing)
         self.assertContains(response, "Selesai")
         self.assertNotContains(response, "Sedang berlangsung")
+
+    def test_achievements_url_is_accessible(self):
+        response = self.client.get(reverse("main:show_achievements"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "achievements.html")
+
+    def test_achievements_page_shows_data_and_structure(self):
+        Achievement.objects.create(
+            title="IELTS Band 7",
+            description="Validasi kemahiran berbahasa Inggris.",
+            category="certification",
+            year="Januari 2025"
+        )
+        response = self.client.get(reverse("main:show_achievements"))
+        self.assertEqual(response.status_code, 200)
+        
+        # mengecek apakah data model berhasil muncul 
+        self.assertContains(response, "IELTS Band 7")
+        self.assertContains(response, "Validasi kemahiran berbahasa")
+        self.assertContains(response, "Januari 2025")
+
+    def test_empty_achievements_page(self):
+        # memastikan pesan kosong muncul saat data tidak ada
+        Achievement.objects.all().delete()
+        response = self.client.get(reverse("main:show_achievements"))
+        self.assertContains(response, "Belum ada pencapaian akademik yang ditambahkan.")
