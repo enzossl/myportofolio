@@ -15,6 +15,7 @@
             <a href="#profile" class="brand">{{ name }}</a>
             <nav>
                 <a href="{% url 'main:show_main' %}">Profile</a>
+                <a href="{% url 'main:show_main' %}#committee">Committee</a>
                 <a href="{% url 'main:show_achievements' %}">Academic Milestones</a>
                 <a href="{% url 'main:show_experience' %}">Experience</a>
             </nav>
@@ -52,7 +53,7 @@
                 </div>
             </div>
         </section>
-        <section class="experience" id="experience">
+        <section class="experience" id="committee">
             <div class="container">
 
                 <div class="section-heading">
