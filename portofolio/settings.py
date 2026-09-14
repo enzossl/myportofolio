@@ -34,6 +34,13 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1","enzo-susilo-myportofolio.pws.cs.ui.ac
 
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://enzo-susilo-myportofolio.pws.cs.ui.ac.id",
+]
+
+CSRF_COOKIE_SECURE    = True
+SESSION_COOKIE_SECURE = True
+
 # Application definition
 
 INSTALLED_APPS = [
