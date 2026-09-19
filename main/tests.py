@@ -46,7 +46,7 @@ class MainTest(TestCase):
         Experience.objects.all().delete()
         response = self.client.get(reverse("main:show_experience"))
 
-        self.assertContains(response, "Belum ada pengalaman yang ditambahkan.")
+        self.assertContains(response, "Belum ada experience yang ditambahkan.")
 
     def test_completed_experience(self):
         self.experience.ended_at = timezone.now()
