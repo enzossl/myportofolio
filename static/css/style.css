@@ -629,10 +629,30 @@ h1, .brand {
         font: inherit;
         font-weight: 700;
         text-decoration: none;
+        /* transisi untuk efek smooth */
+        transition: background-color 0.2s ease, transform 0.1s ease;
     }
 
+    /* Hover untuk tombol utama (Ungu: Tambah, Cari) */
+    .button:hover {
+        background-color: var(--accent-dark);
+        transform: translateY(-2px); /* Efek tombol sedikit terangkat */
+    }
+
+    /* TOMBOL SECONDARY (Hitam: Edit, Batal) */
     .button-secondary {
         background: var(--ink);
+    }
+    .button-secondary:hover {
+        background-color: #44403c; /* Abu-abu gelap saat di-hover */
+    }
+
+    /* TOMBOL DANGER (Merah: Hapus) */
+    .button-danger {
+        background: #b42318;
+    }
+    .button-danger:hover {
+        background-color: #7a1710; /* Merah gelap saat di-hover */
     }
 
     .project-header {
@@ -800,6 +820,8 @@ h1, .brand {
     .button-danger {
         background: #b42318;
     }
+
+    
 
 
 /* =========================================
