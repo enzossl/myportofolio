@@ -25,6 +25,11 @@ Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berik
   * Memindahkan section Academic Milestones (Education) ke template yang berbeda/halaman baru.
   * Menerapkan arsitektur MVT untuk data yang ditampilkan pada website (menjadi dinamis,tidak hardcoded lagi).
   * Melakukan beberapa penyesuaian seperti pada format academic milestones dan mengganti experience pada halaman profile menjadi "committee".
+* **Week 3 - 21 September 2026 (Tugas 3)**
+  * Mengimplementasikan `ModelForm` (`ExperienceForm`) dan fitur CRUD (Create, Read, Update, Delete) beserta *JSON views* untuk *section Experience*.
+  * Mengintegrasikan tombol aksi CRUD, fitur pencarian, dan memisahkan komponen *modal* konfirmasi hapus ke dalam *layout* utama.
+  * Meningkatkan UI/UX dengan menambahkan efek transisi *hover* (terangkat) pada tombol global dan animasi *zoom* pada komponen *card*.
+  * Melakukan perbaikan *bug* minor pada *unit test* (`tests.py`) serta melengkapi dokumentasi tugas.
 
 ### Tugas 1
 
