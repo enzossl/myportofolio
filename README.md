@@ -87,3 +87,34 @@ Tugas 2 ini saya kerjakan dengan bantuan AI untuk memastikan implementasi Django
   * **Debugging Proses Pengujian:** Saat mengeksekusi *unit test* secara lokal, terminal awalnya hanya mendeteksi 6 fungsi tes dari total 9 tes yang ada. Saya melakukan peninjauan lingkungan pengembangan lokal untuk memastikan sinkronisasi penyimpanan *file* sebelum akhirnya seluruh *test* berhasil divalidasi dengan status `OK`.
   * Saya juga mengubah yang awalnya statis seperti 'MATHEMATICS' jadi dinamis menggunakan `{{ achievement.get_category_display }}`. Jadi hanya berdasarkan category yang dipilih.
   * Saya menganalisis fungsi dari sintaks spesifik yang disarankan AI untuk memastikan kesesuaian dengan desain awal. Misalnya, saya memvalidasi penggunaan grid-column: 1 / -1 pada pesan empty state agar teks membentang penuh dan tidak terjepit di satu sel grid. Juga ada trik penomoran visual 0{{ forloop.counter0 }} untuk memastikan urutan indeks kartu kecil (01, 02, dst.) di DTL tetap menghasilkan output yang identik dengan desain statis saya yang sebelumnya.
+
+
+### Tugas 3
+
+1. Kita menggunakan `ModelForm` karena jauh lebih efisien dan mengadopsi prinsip *DRY (Don't Repeat Yourself)*. Daripada harus mengetik tag `<input>` HTML satu per satu dan membuat validasi manual dari nol, `ModelForm` secara otomatis membaca skema dari model `Experience` saya (seperti *title*, *description*, *category*) dan langsung men-*generate* elemen form HTML yang sesuai beserta sistem validasinya.
+Terkait `{% csrf_token %}`, ini adalah mekanisme keamanan wajib dari Django untuk mencegah serangan *Cross-Site Request Forgery* (CSRF). Token ini memastikan bahwa data form yang dikirim (di-*submit*) ke *server* benar-benar berasal dari website saya sendiri, bukan dari *script* jahat atau *website* pihak ketiga yang mencoba memalsukan aksi seolah-olah itu adalah saya pengguna aslinya.
+
+2. JSON (*JavaScript Object Notation*) jauh lebih disukai karena sintaksnya sangat ringan, ringkas, dan mudah dibaca oleh kita manusia. Berbeda dengan XML yang sangat boros karakter karena harus menggunakan tag penutup berlapis (seperti HTML). Selain itu, JSON adalah format *native* dari JavaScript. Di era web modern di mana hampir semua *frontend* menggunakan JavaScript, memproses data JSON bisa langsung dilakukan tanpa perlu di-*parsing* secara rumit seperti XML, sehingga performa pertukaran data antara *Client* dan *Server* menjadi jauh lebih cepat.
+
+3. Alurnya dimulai ketika *URL routing* memanggil fungsi `get_experience_json` di `views.py`. Fungsi tersebut akan melakukan *query* ke *database* (`Experience.objects.all()`) untuk mengambil seluruh objek riwayat pengalaman saya. Setelah data didapat, data tersebut dimasukkan ke dalam fungsi `serializers.serialize("json", experiences)` untuk diubah menjadi format teks JSON, lalu dikembalikan ke *browser* melalui `HttpResponse` dengan *content-type* `application/json`.
+
+Proses *serialization* ini diperlukan karena *browser* atau aplikasi klien tidak mengerti apa itu "Objek Model Django" atau Python. Objek-objek kompleks dari *database* tersebut harus "diterjemahkan" (diserialisasi) ke dalam format universal berbasis teks (seperti JSON) agar bisa ditransmisikan lewat protokol HTTP dan dibaca oleh sistem apa pun.
+
+
+**AI Disclosure & Log Prompting (Tugas 3)**
+
+*   **Tools:** Google Gemini Pro 
+*   **Log Prompting:** https://share.gemini.google/0pltDWZ1KlW8
+*   **Strategi Prompting:** Saya tidak menggunakan AI untuk memberi saya kode yang langsung selesai/tinggal saya copas all in one. Saya menggunakan AI untuk memandu saya langkah demi langkah sesuai instruksi tugas 3, menanyakan konsep-konsep yang membuat saya bingung selama pengerjaan, serta meminta panduan *commit* yang benar dan profesional.
+Pada tugas ini saya memilih halaman experience dari portofolio saya untuk ditambahkan fitur CRUD.
+*   **Bagian spesifik yang dibantu AI:**
+    1. Memahami alur logika `ModelForm` dan cara kerja deserialisasi JSON pada *views*.
+    2. Kerangka untuk implementasi form,view,url, dan template dasar. (Ai memandu saya dalam alur pembuatan form ini, serta mengoreksi kesalahan saya ketika saya menyesuaikan sendiri dari yang sudah ada pada project)
+    3. Memberikan panduan penggunaan *conventional commits* untuk memenuhi kriteria rubrik disiplin Git.
+
+*   **Kritik Keterbatasan AI & Perbaikan Manual yang Saya Lakukan:**
+    Saya tidak menggunakan kode AI secara mentah karena AI biasanya memberikan *template* yang statis dan kaku. Beberapa perombakan dan manual yang saya lakukan:
+    *  **Adaptasi Logika Model & Form:** Walaupun AI langsung memberikan struktur kode `routing` dan `redirect` yang tepat, saya tidak sekadar melakukan *copy-paste*. Saya memverifikasi sendiri bagaimana logika tersebut diadaptasi untuk model `Experience` saya. Saya memastikan bahwa *form* untuk menambah dan memperbarui data menggunakan `get_object_or_404(Experience, pk=experience_id)` dan `instance=experience`, serta dikembalikan secara konsisten ke rute `main:show_experience` menggunakan satu *template* yang sama, yaitu `experiences_form.html`.
+    *  **Implementasi Komponen Modal delete:** Pada panduan awalnya, AI tidak menginstruksikan saya untuk membuat direktori atau *file* komponen baru untuk fitur penghapusan data. Namun, dengan inisiatif sendiri agar struktur kode lebih rapi seperti pola pada proyek sebelumnya, saya memisahkan implementasi *HTML Native Popover* tersebut ke dalam *file* `components/experience_delete_modal.html`. Saya mengadaptasi kode komponen *modal* yang sudah ada, mengganti konteksnya menjadi `experience`, dan mengintegrasikannya ke HTML utama agar lebih *reusable* dan bersih.
+    *  **Kustomisasi Ekstra Interaktivitas (UI/UX):** Kode dari AI hanya mewarisi gaya CSS lama yang polos. Untuk mencapai poin maksimal pada rubrik kesesuaian topik (fitur ekstra), saya bereksperimen secara manual memodifikasi CSS global. Saya menambahkan hierarki warna tombol (aksi utama, sekunder, *danger*) serta memberikan efek transisi `transform` dan `box-shadow`. Hasilnya, setiap tombol dan kartu pengalaman (*card*) memiliki animasi membesar dan terangkat saat di-*hover*.
+    *  **Human Error pada Unit Test:** Saat menjalankan *automated testing* (`tests.py`), saya mendapati *error* pada bagian ekspektasi teks. Ini murni kesalahan saya, di mana saya secara manual mengganti teks *empty state* di HTML dari "pengalaman" menjadi "experience", tetapi lupa menyamakan *string* tersebut di *file* pengujian. Saya mengidentifikasi perbedaan *string* ini secara mandiri dan menyinkronkannya sehingga *test* kembali *Pass*.
