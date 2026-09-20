@@ -102,7 +102,6 @@ Terkait `{% csrf_token %}`, ini adalah mekanisme keamanan wajib dari Django untu
 2. JSON (*JavaScript Object Notation*) jauh lebih disukai karena sintaksnya sangat ringan, ringkas, dan mudah dibaca oleh kita manusia. Berbeda dengan XML yang sangat boros karakter karena harus menggunakan tag penutup berlapis (seperti HTML). Selain itu, JSON adalah format *native* dari JavaScript. Di era web modern di mana hampir semua *frontend* menggunakan JavaScript, memproses data JSON bisa langsung dilakukan tanpa perlu di-*parsing* secara rumit seperti XML, sehingga performa pertukaran data antara *Client* dan *Server* menjadi jauh lebih cepat.
 
 3. Alurnya dimulai ketika *URL routing* memanggil fungsi `get_experience_json` di `views.py`. Fungsi tersebut akan melakukan *query* ke *database* (`Experience.objects.all()`) untuk mengambil seluruh objek riwayat pengalaman saya. Setelah data didapat, data tersebut dimasukkan ke dalam fungsi `serializers.serialize("json", experiences)` untuk diubah menjadi format teks JSON, lalu dikembalikan ke *browser* melalui `HttpResponse` dengan *content-type* `application/json`.
-
 Proses *serialization* ini diperlukan karena *browser* atau aplikasi klien tidak mengerti apa itu "Objek Model Django" atau Python. Objek-objek kompleks dari *database* tersebut harus "diterjemahkan" (diserialisasi) ke dalam format universal berbasis teks (seperti JSON) agar bisa ditransmisikan lewat protokol HTTP dan dibaca oleh sistem apa pun.
 
 
