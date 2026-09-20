@@ -550,6 +550,18 @@ h1, .brand {
         background-color: #fff;
         border: 1px solid var(--line);
         border-radius: var(--radius);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+
+    .experience-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 6px 6px 0 var(--accent);
+    }
+
+    .experience-card:hover .project-image {
+        transform: scale(1.05); /* Gambar membesar 5% */
+        filter: brightness(1.05); /* Gambar jadi sedikit lebih terang */
     }
 
     .experience-category {
@@ -677,8 +689,9 @@ h1, .brand {
         display: block;
         width: 100%;
         height: auto;
-        border: 1px solid black;
+        border: 1px solid var(--line); 
         border-radius: var(--radius);
+        transition: transform 0.4s ease, filter 0.4s ease;
     }
 
     .project-header h1 {
