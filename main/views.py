@@ -37,7 +37,7 @@ def show_achievements(request):
 
 @login_required(login_url="/login/")
 def create_project(request):
-    if not request.user.is_superuser:
+    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
         raise PermissionDenied
     
     form = ProjectForm(request.POST or None)
@@ -62,11 +62,12 @@ def show_projects(request):
     )
     projects = [project.object for project in projects]
     title_query = request.GET.get("title", "").strip()
-
+    is_admin = request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name="Editor").exists())
     context = {
         "name": "Enzo Susilo",
         "project_list": projects,
         "title_query": title_query,
+        "is_admin": is_admin,
     }
     return render(request, "project.html", context)
 
@@ -82,7 +83,7 @@ def get_projects_json(request):
 
 @login_required(login_url="/login/")
 def delete_project(request, project_id):
-    if not request.user.is_superuser :
+    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
         raise PermissionDenied
         
     project = get_object_or_404(Project, pk=project_id)
@@ -105,11 +106,13 @@ def show_experience(request):
     )
     experiences = [experience.object for experience in experiences]
     title_query = request.GET.get("title", "").strip()
+    is_admin = request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name="Editor").exists())
 
     context = {
         "name": "Enzo Susilo",
         "experience_list": experiences,
         "title_query": title_query,
+        "is_admin": is_admin,
     }
     return render(request, "experience.html", context)
 
@@ -120,10 +123,14 @@ def get_experience_json(request):
     if title_query:
         experiences = experiences.filter(title__icontains=title_query)
 
-    experiences_json = serializers.serialize("json", experiences)
+    experiences_json = serializers.serialize("json", experiences, use_natural_foreign_keys=True)
     return HttpResponse(experiences_json, content_type="application/json")
 
+@login_required(login_url="/login/")
 def create_experience(request):
+    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
+        raise PermissionDenied
+    
     form = ExperienceForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
@@ -137,7 +144,11 @@ def create_experience(request):
     }
     return render(request, "experiences_form.html", context)
 
+@login_required(login_url="/login/")
 def delete_experience(request, experience_id):
+    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
+        raise PermissionDenied
+    
     experience = get_object_or_404(Experience, pk=experience_id)
 
     if request.method == "POST":
@@ -147,7 +158,11 @@ def delete_experience(request, experience_id):
 
     return redirect("main:show_experience")
 
+@login_required(login_url="/login/")
 def update_experience(request, experience_id):
+    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
+        raise PermissionDenied
+    
     experience = get_object_or_404(Experience, pk=experience_id)
     # instance=experience memastikan form terisi dengan data yang sudah ada
     form = ExperienceForm(request.POST or None, instance=experience)
@@ -214,3 +229,13 @@ def toggle_star(request, project_id):
             project.starred_by.add(request.user)
 
     return redirect("main:show_projects")
+
+@login_required(login_url="/login/")
+def toggle_star_experience(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+    if request.method == "POST":
+        if request.user in experience.starred_by.all():
+            experience.starred_by.remove(request.user)
+        else:
+            experience.starred_by.add(request.user)
+    return redirect("main:show_experience")
