@@ -11,11 +11,13 @@
                 <!-- Menggunakan layout header dari project -->
                 <div class="project-header">
                     <h1>Experience</h1>
+                    {% if user.is_superuser %} 
                     <a href="{% url 'main:create_experience' %}"
                        class="button project-add-button">
                         <span aria-hidden="true">+</span>
                         Tambah Experience
                     </a>
+                    {% endif %}
                 </div>
                 
                 <!-- Menambahkan fitur Search Bar -->
