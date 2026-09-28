@@ -30,6 +30,10 @@ Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berik
   * Mengintegrasikan tombol aksi CRUD, fitur pencarian, dan memisahkan komponen *modal* konfirmasi hapus ke dalam *layout* utama.
   * Meningkatkan UI/UX dengan menambahkan efek transisi *hover* (terangkat) pada tombol global dan animasi *zoom* pada komponen *card*.
   * Melakukan perbaikan *bug* minor pada *unit test* (`tests.py`) serta melengkapi dokumentasi tugas.
+* **Week 3 - 21 September 2026 (Tugas 3)**
+  * Mengimplementasikan autentikasi dan otorisasi menggunakan pembatasan akses @login_required dan pengecekan hak akses is_superuser serta grup Editor menggunakan is_admin, jadi di django admin web tinggal buat group namany editor.
+  * Menambahkan relasi ManyToManyField pada model Experience untuk fitur interaktif pemberian star.
+  * Mengamankan endpoint API JSON dengan menerapkan parameter use_natural_foreign_keys=True untuk mencegah kebocoran data sensitif user ID.
 
 ### Tugas 1
 
@@ -122,3 +126,18 @@ Pada tugas ini saya memilih halaman experience dari portofolio saya untuk ditamb
     *  **Implementasi Komponen Modal delete:** Pada panduan awalnya, AI tidak menginstruksikan saya untuk membuat direktori atau *file* komponen baru untuk fitur penghapusan data. Namun, dengan inisiatif sendiri agar struktur kode lebih rapi seperti pola pada proyek sebelumnya, saya memisahkan implementasi *HTML Native Popover* tersebut ke dalam *file* `components/experience_delete_modal.html`. Saya mengadaptasi kode komponen *modal* yang sudah ada, mengganti konteksnya menjadi `experience`, dan mengintegrasikannya ke HTML utama agar lebih *reusable* dan bersih.
     *  **Kustomisasi Ekstra Interaktivitas (UI/UX):** Kode dari AI hanya mewarisi gaya CSS lama yang polos. Untuk mencapai poin maksimal pada rubrik kesesuaian topik (fitur ekstra), saya bereksperimen secara manual memodifikasi CSS global. Saya menambahkan hierarki warna tombol (aksi utama, sekunder, *danger*) serta memberikan efek transisi `transform` dan `box-shadow`. Hasilnya, setiap tombol dan kartu pengalaman (*card*) memiliki animasi membesar dan terangkat saat di-*hover*.
     *  **Human Error pada Unit Test:** Saat menjalankan *automated testing* (`tests.py`), saya mendapati *error* pada bagian ekspektasi teks. Ini murni kesalahan saya, di mana saya secara manual mengganti teks *empty state* di HTML dari "pengalaman" menjadi "experience", tetapi lupa menyamakan *string* tersebut di *file* pengujian. Saya mengidentifikasi perbedaan *string* ini secara mandiri dan menyinkronkannya sehingga *test* kembali *Pass*.
+
+### Tugas 4
+**AI Disclosure & Log Prompting (Tugas 4)**
+
+*   **Tools:** Google Gemini Pro 
+*   **Log Prompting:** -
+*   **Strategi Prompting:** Saya tidak menggunakan AI untuk memberi saya kode yang langsung selesai/tinggal saya copas all in one. Saya menggunakan AI untuk memandu saya langkah demi langkah sesuai instruksi tugas 4, serta mengkonfirmasi jawaban saya apakah sudah benar atau belum dan panduan commit yang benar.
+Pada tugas ini saya memilih halaman experience dari portofolio saya untuk memenuhi instruksi tugas 4
+*   **Bagian spesifik yang dibantu AI:**
+    1. Merancang logika server-side authorization untuk mengecek keanggotaan pengguna di dalam Django Group ("Editor") beserta pembatasan akses @login_required.
+    2. Menyusun urutan atomic commit (pemisahan commit untuk migrasi, routing, views.py, dan UI) agar riwayat Git terstruktur.
+
+*   **Kritik Keterbatasan AI & Perbaikan Manual yang Saya Lakukan:**
+    *  **Keterbatasan Logika DTL (Django Template Language):** Karena HTML Django tidak bisa mengeksekusi query filter grup secara langsung di dalam template, AI memberikan dua opsi: menggunakan sistem Permissions bawaan atau membuat variabel context baru. Saya melakukan analisis mandiri dan memilih pendekatan variabel is_admin di views.py (is_admin = request.user.is_superuser or request.user.groups.filter(name="Editor").exists()). Saya menyisipkan variabel ini secara manual agar tag HTML saya tetap bersih ({% if is_admin %}) dan saya tidak perlu mengatur ulang permissions satu per satu di panel admin.
+    *  **Kepatuhan Ketat pada Tutorial API:** Saat mengamankan endpoint JSON dari kebocoran data sensitif (user ID pada field star), AI awalnya merekomendasikan best practice industri dengan menyembunyikan field tersebut secara total menggunakan parameter fields=(...). Saya mengoreksi instruksi ini secara mandiri dengan merujuk pada gambar panduan tutorial, lalu mengubahnya menjadi implementasi use_natural_foreign_keys=True di dalam serializers.serialize agar ID diterjemahkan menjadi username aslinya, memastikan kode saya 100% akurat dengan ekspektasi asisten dosen.
