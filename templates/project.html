@@ -9,7 +9,7 @@
                 <p class="section-kicker">Karya yang saya bangun</p>
                 <div class="project-header">
                     <h1>Projects</h1>
-                    {% if is_admin %}
+                    {% if user.is_superuser %}
                     <a href="{% url 'main:create_project' %}"
                        class="button project-add-button">
                         <span aria-hidden="true">+</span>
@@ -45,7 +45,7 @@
                                         <a href="{{ project.project_url }}" class="button">Lihat Project</a>
                                     {% endif %}
                                     {% include "components/project_star.html" with project=project %}
-                                    {% if is_admin %}
+                                    {% if user.is_superuser %}
                                         {% include "components/project_delete_modal.html" with project=project %}
                                     {% endif %}
                                 </div>

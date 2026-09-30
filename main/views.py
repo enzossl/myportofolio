@@ -37,7 +37,7 @@ def show_achievements(request):
 
 @login_required(login_url="/login/")
 def create_project(request):
-    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
+    if not request.user.is_superuser:
         raise PermissionDenied
     
     form = ProjectForm(request.POST or None)
@@ -62,12 +62,12 @@ def show_projects(request):
     )
     projects = [project.object for project in projects]
     title_query = request.GET.get("title", "").strip()
-    is_admin = request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name="Editor").exists())
+    is_editor = request.user.is_authenticated and request.user.groups.filter(name="Editor").exists()
     context = {
         "name": "Enzo Susilo",
         "project_list": projects,
         "title_query": title_query,
-        "is_admin": is_admin,
+        "is_editor": is_editor,
     }
     return render(request, "project.html", context)
 
@@ -83,7 +83,7 @@ def get_projects_json(request):
 
 @login_required(login_url="/login/")
 def delete_project(request, project_id):
-    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
+    if not request.user.is_superuser:
         raise PermissionDenied
         
     project = get_object_or_404(Project, pk=project_id)
@@ -106,13 +106,13 @@ def show_experience(request):
     )
     experiences = [experience.object for experience in experiences]
     title_query = request.GET.get("title", "").strip()
-    is_admin = request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name="Editor").exists())
+    is_editor = request.user.is_authenticated and (request.user.groups.filter(name="Editor").exists())
 
     context = {
         "name": "Enzo Susilo",
         "experience_list": experiences,
         "title_query": title_query,
-        "is_admin": is_admin,
+        "is_editor": is_editor,
     }
     return render(request, "experience.html", context)
 
@@ -128,7 +128,7 @@ def get_experience_json(request):
 
 @login_required(login_url="/login/")
 def create_experience(request):
-    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
+    if not request.user.is_superuser:
         raise PermissionDenied
     
     form = ExperienceForm(request.POST or None)
@@ -146,8 +146,8 @@ def create_experience(request):
 
 @login_required(login_url="/login/")
 def delete_experience(request, experience_id):
-    if not (request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name="Editor").exists())):
-        raise PermissionDenied
+    if not request.user.is_superuser:
+            raise PermissionDenied
     
     experience = get_object_or_404(Experience, pk=experience_id)
 

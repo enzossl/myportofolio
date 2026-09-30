@@ -11,7 +11,7 @@
                 <!-- Menggunakan layout header dari project -->
                 <div class="project-header">
                     <h1>Experience</h1>
-                    {% if is_admin %} 
+                    {% if user.is_superuser %} 
                     <a href="{% url 'main:create_experience' %}"
                        class="button project-add-button">
                         <span aria-hidden="true">+</span>
@@ -54,10 +54,13 @@
                             <div class="project-card-actions">
                                 <div class="project-actions">
                                     {% include "components/experience_star.html" with experience=experience %}
-                                    {% if is_admin %}
+                                    {% if user.is_superuser or is_editor %}
                                         <a href="{% url 'main:update_experience' experience.id %}" class="button button-secondary">
                                             Edit
                                         </a>
+                                        
+                                    {% endif %}
+                                    {% if user.is_superuser %}
                                         <!-- Memanggil modal delete -->
                                         {% include "components/experience_delete_modal.html" with experience=experience %}
                                     {% endif %}
