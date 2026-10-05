@@ -1,7 +1,9 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from main.forms import ExperienceForm
 from main.models import Experience, Achievement
 
 
@@ -36,26 +38,151 @@ class MainTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "experience.html")
-        self.assertContains(response, self.experience.title)
-        self.assertContains(response, self.experience.description)
-        self.assertContains(response, "Part-Time")
-        self.assertContains(response, "Sedang berlangsung")
+        self.assertContains(response, 'id="experience-search-form"')
+        self.assertContains(response, 'id="loading"')
+        self.assertContains(response, 'id="error"')
+        self.assertContains(response, 'id="empty"')
+        self.assertContains(response, 'id="grid"')
+        self.assertNotContains(response, self.experience.title)
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
+
+    def test_experience_json_contains_data_and_star_information(self):
+        response = self.client.get(reverse("main:get_experience_json"))
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["pk"], str(self.experience.id))
+        self.assertEqual(data[0]["fields"]["title"], self.experience.title)
+        self.assertEqual(data[0]["fields"]["category"], "Part-Time")
+        self.assertEqual(data[0]["fields"]["star_count"], 0)
+        self.assertFalse(data[0]["fields"]["is_starred"])
+        self.assertTrue(data[0]["fields"]["is_ongoing"])
+
+    def test_experience_json_search_filters_by_title(self):
+        Experience.objects.create(
+            title="Relawan Acara",
+            description="Membantu pelaksanaan acara.",
+            category="volunteer",
+        )
+
+        response = self.client.get(
+            reverse("main:get_experience_json"),
+            {"title": "Asisten"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["fields"]["title"], self.experience.title)
+
+    def test_experience_json_marks_star_for_logged_in_user(self):
+        user = User.objects.create_user(username="reader", password="password123")
+        self.experience.starred_by.add(user)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("main:get_experience_json"))
+
+        fields = response.json()[0]["fields"]
+        self.assertEqual(fields["star_count"], 1)
+        self.assertTrue(fields["is_starred"])
+        self.assertEqual(fields["starred_by_names"], user.username)
 
     def test_empty_experience_page(self):
         Experience.objects.all().delete()
         response = self.client.get(reverse("main:show_experience"))
 
-        self.assertContains(response, "Belum ada experience yang ditambahkan.")
+        self.assertContains(
+            response,
+            "Belum ada experience yang ditambahkan atau ditemukan.",
+        )
 
     def test_completed_experience(self):
         self.experience.ended_at = timezone.now()
         self.experience.save()
-        response = self.client.get(reverse("main:show_experience"))
+        response = self.client.get(reverse("main:get_experience_json"))
 
         self.assertFalse(self.experience.is_ongoing)
-        self.assertContains(response, "Selesai")
-        self.assertNotContains(response, "Sedang berlangsung")
+        self.assertFalse(response.json()[0]["fields"]["is_ongoing"])
+
+    def test_experience_form_rejects_title_containing_only_html(self):
+        form = ExperienceForm(data={
+            "title": '<img src="x" onerror="alert(1)">',
+            "description": "Deskripsi aman",
+            "category": "part-time",
+            "thumbnail": "",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("title", form.errors)
+
+    def test_experience_form_strips_html_from_description(self):
+        form = ExperienceForm(data={
+            "title": "Asisten Praktikum",
+            "description": "Membantu <b>mahasiswa</b>",
+            "category": "part-time",
+            "thumbnail": "",
+        })
+
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["description"], "Membantu mahasiswa")
+
+    def test_create_experience_ajax_rejects_unauthorized_user(self):
+        response = self.client.post(
+            reverse("main:create_experience_ajax"),
+            {
+                "title": "Pengalaman Baru",
+                "description": "Deskripsi pengalaman.",
+                "category": "volunteer",
+                "thumbnail": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Experience.objects.count(), 1)
+
+    def test_create_experience_ajax_creates_data_for_superuser(self):
+        owner = User.objects.create_superuser(
+            username="owner",
+            email="owner@example.com",
+            password="password123",
+        )
+        self.client.force_login(owner)
+
+        response = self.client.post(
+            reverse("main:create_experience_ajax"),
+            {
+                "title": "Pengalaman Baru",
+                "description": "Deskripsi pengalaman.",
+                "category": "volunteer",
+                "thumbnail": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Experience.objects.count(), 2)
+        self.assertTrue(Experience.objects.filter(title="Pengalaman Baru").exists())
+
+    def test_create_experience_ajax_returns_validation_errors(self):
+        owner = User.objects.create_superuser(
+            username="owner",
+            email="owner@example.com",
+            password="password123",
+        )
+        self.client.force_login(owner)
+
+        response = self.client.post(
+            reverse("main:create_experience_ajax"),
+            {
+                "title": '<img src="x" onerror="alert(1)">',
+                "description": "Deskripsi pengalaman.",
+                "category": "volunteer",
+                "thumbnail": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("title", response.json()["errors"])
 
     def test_achievements_url_is_accessible(self):
         response = self.client.get(reverse("main:show_achievements"))
