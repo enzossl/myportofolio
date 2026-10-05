@@ -88,3 +88,12 @@ class ExperienceForm(ModelForm):
             "category": Select(), # Select digunakan karena field ini pakai choices di models.py
             "thumbnail": URLInput(attrs={"placeholder": "https://..."}),
         }
+
+    def clean_title(self):
+        title = strip_tags(self.cleaned_data["title"]).strip()
+        if not title:
+            raise ValidationError("Nama pengalaman tidak boleh hanya berisi tag HTML.")
+        return title
+
+    def clean_description(self):
+        return strip_tags(self.cleaned_data["description"]).strip()
