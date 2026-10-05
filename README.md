@@ -30,10 +30,16 @@ Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berik
   * Mengintegrasikan tombol aksi CRUD, fitur pencarian, dan memisahkan komponen *modal* konfirmasi hapus ke dalam *layout* utama.
   * Meningkatkan UI/UX dengan menambahkan efek transisi *hover* (terangkat) pada tombol global dan animasi *zoom* pada komponen *card*.
   * Melakukan perbaikan *bug* minor pada *unit test* (`tests.py`) serta melengkapi dokumentasi tugas.
-* **Week 3 - 21 September 2026 (Tugas 3)**
+* **Week 4 - 28 September 2026 (Tugas 4)**
   * Mengimplementasikan autentikasi dan otorisasi menggunakan pembatasan akses @login_required dan pengecekan hak akses is_superuser serta grup Editor menggunakan is_admin, jadi di django admin web tinggal buat group namany editor.
   * Menambahkan relasi ManyToManyField pada model Experience untuk fitur interaktif pemberian star.
   * Mengamankan endpoint API JSON dengan menerapkan parameter use_natural_foreign_keys=True untuk mencegah kebocoran data sensitif user ID.
+* **Week 5 - 5 Oktober 2026 (Tugas 5)**
+  * Mengubah halaman Experience agar memuat dan menampilkan data secara asinkron melalui AJAX menggunakan endpoint JSON manual.
+  * Menambahkan pencarian berdasarkan judul dengan *debouncing* 300 milidetik, termasuk tampilan *loading*, *empty state*, dan *error state*.
+  * Memindahkan form tambah Experience ke dalam modal berbasis Popover API dan mengirimkan form melalui Fetch API dengan proteksi CSRF serta status respons 201, 400, dan 403.
+  * Mempertahankan fitur *star* dan pembatasan akses dari Tugas 4, serta menambahkan perlindungan XSS pada sisi klien dan server.
+  * Menambahkan pengujian untuk endpoint AJAX, otorisasi, validasi form, pencarian, dan sanitasi masukan.
 
 ### Tugas 1
 
@@ -143,3 +149,32 @@ Pada tugas ini saya memilih halaman experience dari portofolio saya untuk memenu
     *  **Kepatuhan Ketat pada Tutorial API:** Saat mengamankan endpoint JSON dari kebocoran data sensitif (user ID pada field star), AI awalnya merekomendasikan best practice industri dengan menyembunyikan field tersebut secara total menggunakan parameter fields=(...). Saya mengoreksi instruksi ini secara mandiri dengan merujuk pada gambar panduan tutorial, lalu mengubahnya menjadi implementasi use_natural_foreign_keys=True di dalam serializers.serialize agar ID diterjemahkan menjadi username aslinya, memastikan kode saya 100% akurat dengan ekspektasi asisten dosen.
     * **Pemisahan Hak Akses Spesifik/otorisasi (Superuser vs Editor):** AI awalnya menyarankan logika otorisasi yang menggabungkan hak akses Superuser dan Editor ke dalam satu variabel (is_admin), sehingga peran Editor berpotensi bisa melakukan Create dan Delete. Setelah saya meninjau ulang rubrik hak akses minimum, saya menyadari bahwa Editor seharusnya hanya memiliki hak Update. Saya kemudian secara mengganti views.py dan template HTML, yaitu fungsi Create dan Delete hanya untuk is_superuser, dan Update (tombol Edit) hanya untuk grup Editor. Juga pada project jg saya batasi editor gabisa ngeliat tombol delete atau create, walau pada projek ga ada tombol edit
     * **Perbaikan message stacking** : awalnya ngestack di page login
+
+### Tugas 5
+
+1. *Debouncing* adalah teknik untuk menunda pemanggilan suatu fungsi sampai pengguna berhenti melakukan aksi selama waktu tertentu. Pada pencarian Experience, setiap perubahan pada kolom pencarian akan membatalkan `setTimeout` sebelumnya dan membuat jadwal baru selama 300 milidetik. Dengan demikian, permintaan AJAX baru dikirim setelah pengguna berhenti mengetik sejenak, bukan pada setiap karakter yang dimasukkan.
+Teknik ini penting karena dapat mengurangi jumlah *request* ke server, penggunaan jaringan, dan beban kueri database. Selain *debouncing*, implementasi saya menggunakan `AbortController` untuk membatalkan permintaan sebelumnya sehingga respons lama tidak menimpa hasil pencarian terbaru.
+
+2. `fetch()` mengembalikan sebuah `Promise`, bukan langsung objek respons. `await fetch(...)` digunakan untuk menunggu sampai server memberikan objek `Response`, sedangkan `await response.json()` menunggu sampai isi respons selesai dibaca dan diubah menjadi data JavaScript.
+Jika `await` dihilangkan tanpa menggantinya dengan rangkaian `.then()`, variabel yang diterima masih berupa `Promise`. Akibatnya, properti seperti `response.ok` atau metode untuk membaca data belum dapat digunakan sebagaimana mestinya, dan kode berikutnya dapat berjalan sebelum data tersedia. `await` hanya menjeda fungsi `async` yang sedang berjalan, bukan membekukan seluruh halaman browser.
+
+3. *Cross-Site Scripting* (XSS) adalah serangan ketika masukan berbahaya berupa HTML atau JavaScript disisipkan ke halaman lalu dijalankan pada browser pengguna lain. Django Template secara bawaan melakukan *auto-escaping* terhadap nilai yang ditampilkan dengan sintaks `{{ ... }}`. Namun, pada halaman berbasis AJAX, data JSON dirangkai menjadi HTML melalui JavaScript dan dimasukkan menggunakan `innerHTML`, sehingga perlindungan otomatis dari Django Template tidak ikut bekerja.
+Karena itu, implementasi saya mengubah setiap nilai teks menjadi bentuk aman menggunakan fungsi `escapeHtml()` sebelum dimasukkan ke HTML. Pada server, `ExperienceForm` juga membersihkan tag HTML dari `title` dan `description` menggunakan `strip_tags` sebagai pertahanan tambahan. Pesan toast ditampilkan menggunakan `textContent`. Sanitasi sisi server tetap tidak menggantikan kewajiban melakukan *escaping* sesuai konteks pada sisi klien.
+
+**AI Disclosure & Log Prompting (Tugas 5)**
+
+* **Tools yang dipakai:** Google Gemini (utama) dan asisten pemrograman AI di IDE.
+* **Log Prompting:** https://share.gemini.google/SWbX4RIEebSS
+* **Strategi Prompting:** Saya lebih dahulu meminta Gemini memberikan panduan Tugas 5 tanpa menyertakan kode proyek. Setelah itu, saya mencoba untuk menyesuaikan sesuai dengan tutorial 5 sebelumny, lalu saya kirim ke gemini untuk dicek apakah sudah sesuai kah penyesuaiannya. Saya juga ada minta ai agent pada IDE untuk buatin unit test karena itu paling susah sih bagi saya dan disarankan gemini.
+Pada tugas ini saya memilih halaman experience dari portofolio saya untuk memenuhi instruksi tugas 5
+* **Bagian spesifik yang dibantu AI:**
+  1. Gemini membantu memberikan gambaran awal mengenai endpoint JSON, penggunaan Fetch API, *debouncing*, modal AJAX, dan mitigasi XSS.
+  2. Gemini membantu menyusun tahapan *Conventional Commits* agar perubahan dapat disimpan secara bertahap dan terstruktur.
+
+* **Kritik Keterbatasan AI & Penyesuaian yang Dilakukan:**
+  * **Asumsi struktur model yang tidak sesuai:** Gemini menggunakan field `company`, `stars`, dan `user`, sedangkan model proyek menggunakan `category`, `thumbnail`, dan relasi `starred_by`, serta tidak memiliki field `user`. Instruksi seperti `experience.user = request.user` tidak digunakan karena akan menyebabkan kesalahan. Endpoint dan form disesuaikan dengan field model yang sebenarnya.
+  * **Hak akses terlalu luas:** Gemini menyarankan agar seluruh pengguna yang telah login dapat menambah data. Hal ini tidak sesuai dengan aturan Tugas 4 yang sudah diterapkan. Implementasi akhirnya mempertahankan Create dan Delete khusus Superuser, Update untuk Superuser atau Editor, Read untuk semua pengguna, dan Star untuk pengguna yang telah login.
+  * **Ketergantungan Bootstrap yang tidak tersedia:** Contoh Gemini memakai `bootstrap.Modal`, atribut `data-bs-*`, dan kelas `d-none`, padahal proyek tidak memuat Bootstrap. Modal kemudian dibuat menggunakan HTML Native Popover API dan kelas CSS yang telah digunakan oleh proyek.
+  * **Komponen proyek tidak dimanfaatkan:** Gemini membuat sistem toast baru dan nama template generik seperti `experience_page.html`, padahal proyek sudah memiliki fungsi global `showToast`, template `experience.html`, serta pola komponen modal sendiri. Solusi disesuaikan agar memakai komponen dan konvensi yang sudah ada.
+  * **Fitur lama berisiko hilang:** Contoh kartu dinamis dari Gemini belum mempertahankan tombol Star, Edit, dan Delete beserta aturan tampil untuk setiap peran. Rendering AJAX diperbaiki agar seluruh fungsi dari Tugas 4 tetap tersedia setelah data dimuat ulang.
+  * **Penanganan validasi dan keamanan belum cukup kuat:** Respons error awal menggunakan representasi mentah `form.errors`, dan fungsi *escaping* mengasumsikan semua input selalu berupa string. Implementasi diperbaiki dengan `form.errors.get_json_data()`, konversi `String(value ?? '')`, pembersihan tag pada `ExperienceForm`, dan pengecekan keberadaan form sebelum memasang *event listener*.
