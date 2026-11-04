@@ -38,8 +38,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://enzo-susilo-myportofolio.pws.cs.ui.ac.id",
 ]
 
-CSRF_COOKIE_SECURE    = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE    = PRODUCTION
+SESSION_COOKIE_SECURE = PRODUCTION
 
 # Application definition
 
@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main'
+    'main',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
