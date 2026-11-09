@@ -43,7 +43,7 @@ Jika aktivasi environment tidak tersedia, setiap command `python` dapat diganti 
   * Meningkatkan UI/UX dengan menambahkan efek transisi *hover* (terangkat) pada tombol global dan animasi *zoom* pada komponen *card*.
   * Melakukan perbaikan *bug* minor pada *unit test* (`tests.py`) serta melengkapi dokumentasi tugas.
 * **Week 4 - 28 September 2026 (Tugas 4)**
-  * Mengimplementasikan autentikasi dan otorisasi menggunakan pembatasan akses @login_required dan pengecekan hak akses is_superuser serta grup Editor menggunakan is_admin, jadi di django admin web tinggal buat group bernama `Editor`.
+  * Mengimplementasikan autentikasi dan otorisasi menggunakan pembatasan akses @login_required dan pengecekan hak akses is_superuser serta grup Editor menggunakan is_admin, jadi di django admin web tinggal buat group namany editor.
   * Menambahkan relasi ManyToManyField pada model Experience untuk fitur interaktif pemberian star.
   * Mengamankan endpoint API JSON dengan menerapkan parameter use_natural_foreign_keys=True untuk mencegah kebocoran data sensitif user ID.
 * **Week 5 - 5 Oktober 2026 (Tugas 5)**
@@ -199,25 +199,25 @@ Pada tugas ini saya memilih halaman experience dari portofolio saya untuk memenu
 
 ### Tugas 6
 
-1. **REST, JSON, PUT, dan PATCH**
+1. **Jelaskan apa yang dimaksud dengan REST dan mengapa mengembalikan JSON saja belum cukup untuk menyebut sebuah API sebagai RESTful! Jelaskan pula perbedaan PUT dan PATCH beserta contoh kapan masing-masing sebaiknya digunakan!**
 
    REST (*Representational State Transfer*) adalah gaya arsitektur untuk merancang interaksi dengan resource. Pada implementasi ini, URL menunjukkan resource, HTTP method menyatakan tindakan, dan response menggunakan status yang sesuai. Misalnya, `GET /api/v1/experience/` membaca daftar, `POST` pada URL yang sama membuat data, dan `PATCH /api/v1/experience/<uuid>/` memperbarui sebagian data. JSON hanya format representasi; endpoint yang mengembalikan JSON belum otomatis memiliki pengaturan resource, method, dan kontrak yang konsisten dengan REST. Prinsip stateless juga berkaitan dengan kemandirian setiap request. Penggunaan session Django di proyek ini merupakan pilihan praktis untuk website dengan AJAX dalam session yang sama, bukan contoh REST yang sepenuhnya stateless.
 
    PUT digunakan ketika klien mengirim representasi pengganti yang lengkap, misalnya mengirim ulang judul, deskripsi, kategori, dan thumbnail setelah menyunting seluruh data Experience. PATCH digunakan ketika hanya beberapa field ingin diubah, misalnya hanya judul Experience. API memakai `partial=True` untuk PATCH sehingga description yang tidak dikirim tetap memakai nilai lama. PUT dengan hanya title ditolak karena description wajib. Pada serializer ini, field opsional yang tidak dikirim saat PUT tidak otomatis selalu dikosongkan; perilakunya mengikuti aturan serializer.
 
-2. **Peran serializer dibanding JsonResponse manual**
+2. **Jelaskan peran serializer pada Django REST Framework! Apa keuntungannya dibandingkan merakit dictionary secara manual dengan JsonResponse seperti pada Tutorial 05?**
 
    `ExperienceSerializer` mengubah objek model menjadi representasi yang dapat dirender DRF sebagai JSON, dan memvalidasi input sebelum menyimpan perubahan. Daftar field ditulis eksplisit. Field model menyediakan validasi dasar, seperti choices kategori dan format URL thumbnail, sementara `validate_title` dan `validate_description` membersihkan tag HTML serta menolak teks yang menjadi kosong. Validasi `ExperienceForm.clean_*` tidak otomatis dipanggil oleh serializer, sehingga aturan input API ditulis pada serializer itu sendiri.
 
    Dibanding merakit dictionary satu per satu dalam `JsonResponse`, serializer menyatukan representasi, validasi, serta create/update dalam kontrak yang dapat digunakan kembali. Informasi `star_count`, `is_starred`, dan `starred_by_names` dihitung server dan bersifat read-only. `context` request memungkinkan status star sesuai akun yang sedang melihat. Email, password hash, dan objek User lengkap tidak ikut ditampilkan. `strip_tags` bukan jaminan sanitasi HTML yang menyeluruh; frontend tetap memakai escaping atau `textContent` saat menampilkan data.
 
-3. **Autentikasi, otorisasi, dan permission di server**
+3. **Jelaskan perbedaan autentikasi dan otorisasi pada Django REST Framework! Mengapa hak akses harus diperiksa dengan permission class di server, bukan hanya dengan menyembunyikan tombol di template?**
 
    Autentikasi mengenali siapa pengirim request. `SessionAuthentication` menggunakan session login Django untuk mengisi `request.user`. Otorisasi menentukan tindakan yang boleh dilakukan akun tersebut. `IsPortfolioOwnerOrEditorOrReadOnly` mengizinkan pembacaan publik, pengelolaan penuh oleh superuser, dan PUT/PATCH oleh anggota Group `Editor`. Endpoint star memakai `IsAuthenticated`, sehingga semua akun login boleh memberi atau membatalkan star dengan identitas dari `request.user`.
 
    Menyembunyikan tombol hanya mengatur tampilan. Pengguna masih dapat mengirim request langsung melalui Console, Browsable API, atau klien lain. Karena itu permission diperiksa di server sebelum operasi tulis. Test penolakan memeriksa status 403 dan isi database agar terbukti data tidak berubah. Peran Editor berlaku pada Experience; permission Projects tetap hanya mengizinkan superuser mengelolanya.
 
-4. **SessionAuthentication, CSRF, dan pengujiannya**
+4. **Jelaskan mengapa permintaan yang mengubah data tetap memerlukan token CSRF ketika API memakai SessionAuthentication! Mengapa test yang memakai force_authenticate tidak cukup untuk membuktikan bahwa perlindungan CSRF berjalan?**
 
    Browser mengirim cookie session secara otomatis pada request yang sesuai. Situs lain dapat mencoba memanfaatkan perilaku ini untuk memicu tindakan dengan session pengguna. Karena itu POST, PUT, PATCH, dan DELETE melalui session tetap memerlukan perlindungan CSRF. Halaman Experience merender token CSRF meskipun pengguna tidak memperoleh form tambah, dan setiap fetch yang mengubah data menyertakan header `X-CSRFToken`.
 
@@ -226,7 +226,7 @@ Pada tugas ini saya memilih halaman experience dari portofolio saya untuk memenu
 **AI Disclosure & Log Prompting (Tugas 6)**
 
 * **Tools yang dipakai:** ChatGPT/Codex sebagai asisten pemrograman di IDE.
-* **Log Prompting:** Percakapan pengerjaan Tutorial 07 dan Tugas 6 di ChatGPT/Codex. Contoh prompt pada 9 November 2026: "sesuaikan dengan pdf tugas 6 dan tutorial 7" dan "beritau gw commit yang perlu gw lakukan biar bertahap". Tindak lanjutnya adalah mencocokkan kode dengan kedua PDF dan memisahkan perubahan berdasarkan fitur.
+* **Log Prompting:** https://chatgpt.com/s/cx_6af1e599cd3881919920cf599a41909d
 * **Strategi Prompting:** Saya memberikan konteks kode proyek dan PDF, lalu meminta AI melanjutkan implementasi dari hasil Tutorial 07. Saya juga meminta penjelasan mengenai hak Editor, perbedaan Group dengan Django Permission, pengujian, serta pembagian commit yang bertahap.
 
 Pada tugas ini saya memilih halaman Experience dari portofolio saya untuk memenuhi instruksi Tugas 6.
