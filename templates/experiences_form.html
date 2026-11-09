@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 {% block meta %}
-    <title>Add Experience - {{ name }}</title>
+    <title>{% if is_edit %}Edit{% else %}Tambah{% endif %} Experience - {{ name }}</title>
 {% endblock meta %}
 {% block content %}
     <main>
         <section class="experience-section">
             <div class="container">
-                <h1>Add New Experience</h1>
-                <form method="post"
+                <h1>{% if is_edit %}Edit Experience{% else %}Tambah Experience{% endif %}</h1>
+                <form id="experience-page-form"
+                      method="post"
                       class="project-form">
                     {% csrf_token %}
+                    <p id="experience-form-errors" class="form-error" role="alert" hidden></p>
                     {% for field in form %}
                         <div class="form-group">
                             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -19,10 +21,71 @@
                             {% endfor %}
                         </div>
                     {% endfor %}
-                    <button type="submit" class="button">Tambah Experience</button>
-                    <a href="{% url 'main:show_experience' %}" class="button button-secondary">Batal</a>
+                    <button type="submit" class="button">{% if is_edit %}Simpan Perubahan{% else %}Tambah Experience{% endif %}</button>
+                    <a href="{% url 'main:show_experience' %}" class="button button-secondary">Kembali ke Experience</a>
                 </form>
             </div>
         </section>
     </main>
+    <script>
+    const EXPERIENCE_FORM_ENDPOINT = "{% if is_edit %}{% url 'api:experience-detail' experience_id %}{% else %}{% url 'api:experience-list' %}{% endif %}";
+    const EXPERIENCE_FORM_METHOD = "{% if is_edit %}PATCH{% else %}POST{% endif %}";
+    const experiencePageForm = document.getElementById('experience-page-form');
+    const formErrorSummary = document.getElementById('experience-form-errors');
+    const EXPERIENCE_FIELDS = ['title', 'description', 'category', 'thumbnail'];
+
+    function getCookie(name) {
+        const prefix = `${name}=`;
+        const cookie = document.cookie.split(';').map(value => value.trim())
+            .find(value => value.startsWith(prefix));
+        return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+    }
+
+    function apiErrorMessage(data, status) {
+        const messages = Object.values(data).flat().filter(value => typeof value === 'string');
+        return messages.join(' ') || `Permintaan gagal (HTTP ${status}).`;
+    }
+
+    experiencePageForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const button = experiencePageForm.querySelector('button[type="submit"]');
+        if (button.disabled) return;
+        button.disabled = true;
+        formErrorSummary.hidden = true;
+        formErrorSummary.textContent = '';
+
+        try {
+            const fields = new FormData(experiencePageForm);
+            const payload = Object.fromEntries(EXPERIENCE_FIELDS.map(name => [name, fields.get(name)]));
+            const response = await fetch(EXPERIENCE_FORM_ENDPOINT, {
+                method: EXPERIENCE_FORM_METHOD,
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(apiErrorMessage(result, response.status));
+
+            if (EXPERIENCE_FORM_METHOD === 'POST') {
+                experiencePageForm.reset();
+            } else {
+                EXPERIENCE_FIELDS.forEach(name => {
+                    experiencePageForm.elements.namedItem(name).value = result[name] ?? '';
+                });
+            }
+            showToast('Berhasil', EXPERIENCE_FORM_METHOD === 'PATCH'
+                ? 'Perubahan experience berhasil disimpan.'
+                : 'Experience berhasil ditambahkan.', 'success');
+        } catch (error) {
+            formErrorSummary.textContent = error.message;
+            formErrorSummary.hidden = false;
+            showToast('Gagal menyimpan experience', error.message, 'error');
+        } finally {
+            button.disabled = false;
+        }
+    });
+    </script>
 {% endblock content %}

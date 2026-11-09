@@ -169,6 +169,7 @@ def create_experience(request):
     context = {
         "name": "Enzo Susilo",
         "form": form,
+        "is_edit": False,
     }
     return render(request, "experiences_form.html", context)
 
@@ -203,6 +204,8 @@ def update_experience(request, experience_id):
     context = {
         "name": "Enzo Susilo",
         "form": form,
+        "is_edit": True,
+        "experience_id": experience.id,
     }
     # Kita bisa menggunakan template form yang sama dengan fungsi create
     return render(request, "experiences_form.html", context)
