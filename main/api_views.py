@@ -105,7 +105,10 @@ def project_star(request, project_id):
 @permission_classes([IsPortfolioOwnerOrEditorOrReadOnly])
 def experience_list(request):
     if request.method in ("GET", "HEAD"):
-        experiences = Experience.objects.order_by("title", "id")
+        experiences = Experience.objects.prefetch_related("starred_by").order_by("title", "id")
+        title = request.query_params.get("title", "").strip()
+        if title:
+            experiences = experiences.filter(title__icontains=title)
         serializer = ExperienceSerializer(
             experiences, many=True, context={"request": request},
         )
@@ -123,7 +126,9 @@ def experience_list(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrEditorOrReadOnly])
 def experience_detail(request, experience_id):
-    experience = get_object_or_404(Experience, pk=experience_id)
+    experience = get_object_or_404(
+        Experience.objects.prefetch_related("starred_by"), pk=experience_id,
+    )
     if request.method in ("GET", "HEAD"):
         serializer = ExperienceSerializer(
             experience, context={"request": request},
@@ -139,4 +144,17 @@ def experience_detail(request, experience_id):
     )
     serializer.is_valid(raise_exception=True)
     serializer.save()
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def experience_star(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+    if experience.starred_by.filter(pk=request.user.pk).exists():
+        experience.starred_by.remove(request.user)
+    else:
+        experience.starred_by.add(request.user)
+    serializer = ExperienceSerializer(experience, context={"request": request})
     return Response(serializer.data)
