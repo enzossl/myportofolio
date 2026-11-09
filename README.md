@@ -9,13 +9,25 @@ Repositori ini berisi kode sumber (*source code*) untuk website portofolio priba
 * [Tautan PWS / Deployment](https://enzo-susilo-myportofolio.pws.cs.ui.ac.id/)
 
 ## Instruksi Setup (Cara Menjalankan Secara Lokal)
-Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berikut:
-1. Pastikan Python sudah terinstal di sistem Anda.
-2. *Clone* repositori ini ke perangkat lokal Anda.
-3. Buka terminal/command prompt, lalu arahkan ke direktori proyek ini.
-4. Jalankan perintah berikut untuk menyalakan *local server*:
-   `python manage.py runserver`
-5. Buka *browser* pilihan Anda dan akses alamat `http://localhost:8000`.
+Environment pengujian menggunakan Python 3.13, Django seri 5.2, dan DRF seri 3.18. Jalankan dari folder yang berisi `manage.py`. Contoh untuk PowerShell Windows:
+
+```powershell
+py -m venv env
+.\env\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+Jika `env` sudah ada, cukup aktifkan kembali. Untuk development lokal, gunakan `PRODUCTION=False` pada `.env` lokal agar memakai SQLite dan cookie sesuai HTTP lokal. `.env`, database lokal, dan virtual environment tidak disimpan ke Git.
+
+```powershell
+python manage.py migrate
+python manage.py check
+python manage.py runserver
+```
+
+Buka `http://localhost:8000`. Jika belum ada pemilik portofolio lokal, jalankan `python manage.py createsuperuser` dan masukkan kredensial secara interaktif. Untuk menguji Editor, buat Group bernama tepat `Editor` melalui Django Admin dan tambahkan akun uji biasa ke grup tersebut. Keanggotaan grup ini digunakan oleh permission aplikasi; tidak perlu mengganti pendekatannya menjadi `has_perm()`.
+
+Jika aktivasi environment tidak tersedia, setiap command `python` dapat diganti dengan `.\env\Scripts\python.exe`. Di PWS, pertahankan konfigurasi production, database, dan origin HTTPS milik deployment.
 
 ## Progress Log
 * **Week 1 - 7 September 2026 (Tugas 1)**
@@ -31,7 +43,7 @@ Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berik
   * Meningkatkan UI/UX dengan menambahkan efek transisi *hover* (terangkat) pada tombol global dan animasi *zoom* pada komponen *card*.
   * Melakukan perbaikan *bug* minor pada *unit test* (`tests.py`) serta melengkapi dokumentasi tugas.
 * **Week 4 - 28 September 2026 (Tugas 4)**
-  * Mengimplementasikan autentikasi dan otorisasi menggunakan pembatasan akses @login_required dan pengecekan hak akses is_superuser serta grup Editor menggunakan is_admin, jadi di django admin web tinggal buat group namany editor.
+  * Mengimplementasikan autentikasi dan otorisasi menggunakan pembatasan akses @login_required dan pengecekan hak akses is_superuser serta grup Editor menggunakan is_admin, jadi di django admin web tinggal buat group bernama `Editor`.
   * Menambahkan relasi ManyToManyField pada model Experience untuk fitur interaktif pemberian star.
   * Mengamankan endpoint API JSON dengan menerapkan parameter use_natural_foreign_keys=True untuk mencegah kebocoran data sensitif user ID.
 * **Week 5 - 5 Oktober 2026 (Tugas 5)**
@@ -40,6 +52,12 @@ Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berik
   * Memindahkan form tambah Experience ke dalam modal berbasis Popover API dan mengirimkan form melalui Fetch API dengan proteksi CSRF serta status respons 201, 400, dan 403.
   * Mempertahankan fitur *star* dan pembatasan akses dari Tugas 4, serta menambahkan perlindungan XSS pada sisi klien dan server.
   * Menambahkan pengujian untuk endpoint AJAX, otorisasi, validasi form, pencarian, dan sanitasi masukan.
+* **9 November 2026 (Tugas 6)**
+  * Melanjutkan fondasi permission dan API Experience dari Tutorial 07 menjadi API DRF lengkap untuk bagian pilihan Tugas 3-5.
+  * Menambahkan informasi star read-only, pencarian judul, dan endpoint star berbasis akun session.
+  * Menghubungkan halaman Experience ke API baru untuk daftar, pencarian, tambah, star/unstar, dan hapus tanpa reload dokumen.
+  * Mengubah halaman edit yang sudah ada agar menyimpan perubahan melalui PATCH, dengan akses untuk Editor dan superuser.
+  * Menambahkan test validasi, empat peran, CSRF, tampilan form, escaping, dan regresi Projects; seluruh 50 test app `main` lulus pada pemeriksaan lokal.
 
 ### Tugas 1
 
@@ -178,3 +196,48 @@ Pada tugas ini saya memilih halaman experience dari portofolio saya untuk memenu
   * **Komponen proyek tidak dimanfaatkan:** Gemini membuat sistem toast baru dan nama template generik seperti `experience_page.html`, padahal proyek sudah memiliki fungsi global `showToast`, template `experience.html`, serta pola komponen modal sendiri. Solusi disesuaikan agar memakai komponen dan konvensi yang sudah ada.
   * **Fitur lama berisiko hilang:** Contoh kartu dinamis dari Gemini belum mempertahankan tombol Star, Edit, dan Delete beserta aturan tampil untuk setiap peran. Rendering AJAX diperbaiki agar seluruh fungsi dari Tugas 4 tetap tersedia setelah data dimuat ulang.
   * **Penanganan validasi dan keamanan belum cukup kuat:** Respons error awal menggunakan representasi mentah `form.errors`, dan fungsi *escaping* mengasumsikan semua input selalu berupa string. Implementasi diperbaiki dengan `form.errors.get_json_data()`, konversi `String(value ?? '')`, pembersihan tag pada `ExperienceForm`, dan pengecekan keberadaan form sebelum memasang *event listener*.
+
+### Tugas 6
+
+1. **REST, JSON, PUT, dan PATCH**
+
+   REST (*Representational State Transfer*) adalah gaya arsitektur untuk merancang interaksi dengan resource. Pada implementasi ini, URL menunjukkan resource, HTTP method menyatakan tindakan, dan response menggunakan status yang sesuai. Misalnya, `GET /api/v1/experience/` membaca daftar, `POST` pada URL yang sama membuat data, dan `PATCH /api/v1/experience/<uuid>/` memperbarui sebagian data. JSON hanya format representasi; endpoint yang mengembalikan JSON belum otomatis memiliki pengaturan resource, method, dan kontrak yang konsisten dengan REST. Prinsip stateless juga berkaitan dengan kemandirian setiap request. Penggunaan session Django di proyek ini merupakan pilihan praktis untuk website dengan AJAX dalam session yang sama, bukan contoh REST yang sepenuhnya stateless.
+
+   PUT digunakan ketika klien mengirim representasi pengganti yang lengkap, misalnya mengirim ulang judul, deskripsi, kategori, dan thumbnail setelah menyunting seluruh data Experience. PATCH digunakan ketika hanya beberapa field ingin diubah, misalnya hanya judul Experience. API memakai `partial=True` untuk PATCH sehingga description yang tidak dikirim tetap memakai nilai lama. PUT dengan hanya title ditolak karena description wajib. Pada serializer ini, field opsional yang tidak dikirim saat PUT tidak otomatis selalu dikosongkan; perilakunya mengikuti aturan serializer.
+
+2. **Peran serializer dibanding JsonResponse manual**
+
+   `ExperienceSerializer` mengubah objek model menjadi representasi yang dapat dirender DRF sebagai JSON, dan memvalidasi input sebelum menyimpan perubahan. Daftar field ditulis eksplisit. Field model menyediakan validasi dasar, seperti choices kategori dan format URL thumbnail, sementara `validate_title` dan `validate_description` membersihkan tag HTML serta menolak teks yang menjadi kosong. Validasi `ExperienceForm.clean_*` tidak otomatis dipanggil oleh serializer, sehingga aturan input API ditulis pada serializer itu sendiri.
+
+   Dibanding merakit dictionary satu per satu dalam `JsonResponse`, serializer menyatukan representasi, validasi, serta create/update dalam kontrak yang dapat digunakan kembali. Informasi `star_count`, `is_starred`, dan `starred_by_names` dihitung server dan bersifat read-only. `context` request memungkinkan status star sesuai akun yang sedang melihat. Email, password hash, dan objek User lengkap tidak ikut ditampilkan. `strip_tags` bukan jaminan sanitasi HTML yang menyeluruh; frontend tetap memakai escaping atau `textContent` saat menampilkan data.
+
+3. **Autentikasi, otorisasi, dan permission di server**
+
+   Autentikasi mengenali siapa pengirim request. `SessionAuthentication` menggunakan session login Django untuk mengisi `request.user`. Otorisasi menentukan tindakan yang boleh dilakukan akun tersebut. `IsPortfolioOwnerOrEditorOrReadOnly` mengizinkan pembacaan publik, pengelolaan penuh oleh superuser, dan PUT/PATCH oleh anggota Group `Editor`. Endpoint star memakai `IsAuthenticated`, sehingga semua akun login boleh memberi atau membatalkan star dengan identitas dari `request.user`.
+
+   Menyembunyikan tombol hanya mengatur tampilan. Pengguna masih dapat mengirim request langsung melalui Console, Browsable API, atau klien lain. Karena itu permission diperiksa di server sebelum operasi tulis. Test penolakan memeriksa status 403 dan isi database agar terbukti data tidak berubah. Peran Editor berlaku pada Experience; permission Projects tetap hanya mengizinkan superuser mengelolanya.
+
+4. **SessionAuthentication, CSRF, dan pengujiannya**
+
+   Browser mengirim cookie session secara otomatis pada request yang sesuai. Situs lain dapat mencoba memanfaatkan perilaku ini untuk memicu tindakan dengan session pengguna. Karena itu POST, PUT, PATCH, dan DELETE melalui session tetap memerlukan perlindungan CSRF. Halaman Experience merender token CSRF meskipun pengguna tidak memperoleh form tambah, dan setiap fetch yang mengubah data menyertakan header `X-CSRFToken`.
+
+   `force_authenticate` membantu memilih akun langsung dalam test permission, tetapi melewati proses autentikasi normal dan tidak membuktikan bahwa session serta pemeriksaan CSRF bekerja. Test tambahan memakai `APIClient(enforce_csrf_checks=True)` dan `.login()`: request tulis tanpa token ditolak, database tetap sama, lalu operasi dengan token yang diperoleh dari halaman nyata berhasil untuk peran yang diizinkan.
+
+**AI Disclosure & Log Prompting (Tugas 6)**
+
+* **Tools yang dipakai:** ChatGPT/Codex sebagai asisten pemrograman di IDE.
+* **Log Prompting:** Percakapan pengerjaan Tutorial 07 dan Tugas 6 di ChatGPT/Codex. Contoh prompt pada 9 November 2026: "sesuaikan dengan pdf tugas 6 dan tutorial 7" dan "beritau gw commit yang perlu gw lakukan biar bertahap". Tindak lanjutnya adalah mencocokkan kode dengan kedua PDF dan memisahkan perubahan berdasarkan fitur.
+* **Strategi Prompting:** Saya memberikan konteks kode proyek dan PDF, lalu meminta AI melanjutkan implementasi dari hasil Tutorial 07. Saya juga meminta penjelasan mengenai hak Editor, perbedaan Group dengan Django Permission, pengujian, serta pembagian commit yang bertahap.
+
+Pada tugas ini saya memilih halaman Experience dari portofolio saya untuk memenuhi instruksi Tugas 6.
+
+* **Bagian spesifik yang dibantu AI:**
+  1. Melengkapi serializer dan API Experience untuk pencarian, validasi, star, serta hak akses empat peran.
+  2. Menghubungkan halaman Experience dan halaman edit lama ke API melalui fetch, dengan toast, CSRF, dan escaping.
+  3. Menulis test API dan halaman, memeriksa hasilnya, menyusun draft jawaban reflektif, serta memberi panduan commit.
+
+* **Kritik Keterbatasan AI & Penyesuaian yang Dilakukan:**
+  * **Batas tutorial dan tugas:** Pada pengerjaan sebelumnya, AI sempat memperluas implementasi ketika saya masih berfokus pada Tutorial 07. Saya meminta tambahan tersebut dibatasi kembali. Untuk Tugas 6, cakupan implementasi dicocokkan dengan checklist pada PDF.
+  * **Penyesuaian terhadap proyek:** Implementasi memakai model Experience, UUID, relasi `starred_by`, Group `Editor`, form, serta komponen toast yang sudah tersedia. Pengecekan grup dipertahankan karena proyek sebelumnya memakai Group, bukan pemeriksaan izin melalui `has_perm()`.
+  * **Format data dan hak akses:** Rendering disesuaikan dari `item.pk`/`item.fields` menjadi objek JSON datar. Permission Experience mempertahankan hak update Editor, sedangkan pengelolaan Projects tetap hanya untuk superuser. Field star dihitung server dan tidak dapat dipalsukan melalui input klien.
+  * **Batas pengujian otomatis:** Test memakai database pengujian terpisah dan mencakup session serta CSRF, bukan hanya `force_authenticate`. Hasil test otomatis tetap perlu dilengkapi pemeriksaan visual di browser dan smoke test deployment; hasil lokal tidak dianggap sebagai bukti bahwa semua interaksi PWS sudah teruji.
